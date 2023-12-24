@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Button, TextField } from "@mui/material";
 import VoiceRecorder from "../../components/VoiceRecorder";
 import { ToastContainer, toast } from "react-toastify";
@@ -13,17 +13,12 @@ import { v4 as uuidv4 } from "uuid";
 export default function Information() {
   const {
     UID,
+    selectedDifficulty,
+    setSelectedDifficulty,
     SETUID,
-    setPart1_question_time,
-    setPart1_waiting_time,
-    setPart2_question_time,
-    setPart2_waiting_time,
-    setPart3_question_time,
-    setPart3_waiting_time,
   } = useContext(AuthContext);
 
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('');
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [fatherName, setFatherName] = useState("");
@@ -48,7 +43,6 @@ export default function Information() {
   const handleDifficultyChange = (event) => {
     const difficulty = event.target.value;
     setSelectedDifficulty(difficulty);
-    console.log(difficulty);
   };
 
   const handleSubmit = async () => {
@@ -80,15 +74,22 @@ export default function Information() {
           },
         );
 
-        success();
-        setName("");
-        setSurname("");
-        setFatherName("");
-        localStorage.setItem("user", true);
         if(selectedDifficulty === "daraja_1"){
           navigate("/task_id=1/question=1");
-        } else {
+          success();
+          setName("");
+          setSurname("");
+          setFatherName("");
+          localStorage.setItem("user", true);
+        } else if(selectedDifficulty === "daraja_2") {
           navigate("/kids_id=1/question=1");
+          success();
+          setName("");
+          setSurname("");
+        setFatherName("");
+        localStorage.setItem("user", true);
+        } else {
+          warning();
         }
       } catch (error) {
         setIsLoading(false);
@@ -121,24 +122,6 @@ export default function Information() {
           }
         };
         getStatus();
-
-        const getSettings = async () => {
-          const { data } = await Axios.get("settings/", {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${
-                JSON.parse(localStorage.getItem("jwtToken")).access
-              }`,
-            },
-          });
-          setPart1_question_time(data.part1_question_time);
-          setPart1_waiting_time(data.part1_waiting_time);
-          setPart2_question_time(data.part2_question_time);
-          setPart2_waiting_time(data.part2_waiting_time);
-          setPart3_question_time(data.part3_question_time);
-          setPart3_waiting_time(data.part3_waiting_time);
-        };
-        getSettings();
       }
     } catch (error) {
       console.error(error);

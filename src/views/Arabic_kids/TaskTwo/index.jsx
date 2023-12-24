@@ -100,7 +100,7 @@ export default function TaskTwo() {
 
           return () => clearInterval(intervalId);
         } else {
-          navigate("/task_id=3/question=1");
+          navigate("/kids_id=3/question=1");
         }
       }
     }

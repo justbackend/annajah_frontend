@@ -84,7 +84,7 @@ export default function TaskThreeQuestion1() {
   }, []);
 
   useEffect(() => {
-    if (oneAudio && twoAudio && threeAudio) {
+    if (oneAudio && twoAudio && threeAudio ) {
       if (warningSecond > 0) {
         const intervalId = setInterval(() => {
           setWarningSecond((prevSecond) => prevSecond - 1);
@@ -106,7 +106,7 @@ export default function TaskThreeQuestion1() {
 
           return () => clearInterval(intervalId);
         } else {
-          navigate("/task_id=3/question=2");
+          navigate("/kids_id=3/question=2");
         }
       }
     }

@@ -13,13 +13,19 @@ export default function AuthContextProvider({ children }) {
   const [partOneData, setPartOneData] = useState({});
   const [must, setMust] = useState({});
   const [UID, SETUID] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("");
 
   const URL = "https://alnajah.pythonanywhere.com";
+
+  const URL_Kids = "https://alnajah.pythonanywhere.com/kids/"
 
   const Content = {
     UID,
     SETUID,
     URL,
+    URL_Kids,
+    selectedDifficulty,
+    setSelectedDifficulty,
     part1_question_time,
     part1_waiting_time,
     part2_question_time,

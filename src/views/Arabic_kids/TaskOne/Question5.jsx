@@ -75,7 +75,7 @@ export default function TaskOneQuestion5() {
 
           return () => clearInterval(intervalId);
         } else {
-          navigate("/task_id=2");
+          navigate("/kids_id=2");
         }
       }
     }

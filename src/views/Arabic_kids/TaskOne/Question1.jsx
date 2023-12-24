@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
 import { useNavigate } from "react-router-dom";
 import Axios_Arabic_kids from "../../../api/Axios_arabic_kids";
 import Loading from "../../../components/Loading";
+import { Button } from "@mui/material";
 import { AuthContext } from "../../../hooks/Context/AuthContext";
 import taskQuestionAudio from "../../../assets/audio/question1.aac";
 import rington from "../../../assets/audio/rington.mp3";
+import { FaPlay, FaPause } from "react-icons/fa6";
+import Axios from "../../../api/Axios";
 
 export default function ArabicKidsQuestion1() {
   const {
@@ -17,10 +20,18 @@ export default function ArabicKidsQuestion1() {
     partOneData,
     setMust,
     must,
+    setPart1_question_time,
+    setPart1_waiting_time,
+    setPart2_question_time,
+    setPart2_waiting_time,
+    setPart3_question_time,
+    setPart3_waiting_time,
+    selectedDifficulty,
   } = useContext(AuthContext);
 
-  const [warningSecond, setWarningSecond] = useState(part1_waiting_time);
-  const [second, setSecond] = useState(part1_question_time);
+  const [warningSecond, setWarningSecond] = useState(0);
+  const [second, setSecond] = useState(0);
+  const [isSecond, setIsSecond] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [oneAudio, setOneAudio] = useState(false);
@@ -80,7 +91,7 @@ export default function ArabicKidsQuestion1() {
         getQuestion1();
 
         const getMust = async () => {
-          const { data } = await Axios_Arabic_kids.get("shart/", {
+          const { data } = await Axios_Arabic_kids.get("/shart/", {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${
@@ -107,6 +118,39 @@ export default function ArabicKidsQuestion1() {
   }, []);
 
   useEffect(() => {
+    try {
+      if (localStorage.getItem("jwtToken")) {
+        const getSettings = async () => {
+          const { data } = await Axios.get(
+            selectedDifficulty == "daraja_1" ? "settings/" : "kids/settings/",
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${
+                  JSON.parse(localStorage.getItem("jwtToken")).access
+                }`,
+              },
+            },
+          );
+          setPart1_question_time(data.part1_question_time);
+          setSecond(data.part1_question_time);
+          setPart1_waiting_time(data.part1_waiting_time);
+          setWarningSecond(data.part1_waiting_time);
+          setPart2_question_time(data.part2_question_time);
+          setPart2_waiting_time(data.part2_waiting_time);
+          setPart3_question_time(data.part3_question_time);
+          setPart3_waiting_time(data.part3_waiting_time);
+        };
+        getSettings();
+      }
+    } catch (error) {
+      console.error(error.message);
+      setIsLoading(false);
+      window.location.href = "/";
+    }
+  }, [second, warningSecond]);
+
+  useEffect(() => {
     if (oneAudio && twoAudio && threeAudio) {
       if (warningSecond > 0) {
         const intervalId = setInterval(() => {
@@ -122,18 +166,18 @@ export default function ArabicKidsQuestion1() {
           },
           1000 * (part1_question_time - 1),
         );
-        if (second > 0) {
+        if (second > 0 && !isSecond) {
           const intervalId = setInterval(() => {
             setSecond((prevSecond) => prevSecond - 1);
           }, 1000);
 
           return () => clearInterval(intervalId);
         } else {
-          navigate("/task_id=1/question=2");
+          navigate("/kids_id=1/question=2");
         }
       }
     }
-  }, [warningSecond, second, oneAudio, twoAudio, threeAudio]);
+  }, [warningSecond, second, oneAudio, twoAudio, threeAudio, isSecond]);
 
   const handleEndedOneAudio = () => {
     setOneAudio(true);
@@ -151,11 +195,17 @@ export default function ArabicKidsQuestion1() {
     setIsRington(true);
   };
 
+  const handleAudioStoped = () => {
+    recorderControls.stopRecording();
+
+    setIsSecond(true);
+  };
+
   return (
     <>
       <audio
         onEnded={handleEndedOneAudio}
-        src={URL + must.audio1}
+        src={URL + must?.audio1}
         autoPlay
       ></audio>
 
@@ -238,6 +288,17 @@ export default function ArabicKidsQuestion1() {
                   showVisualizer={true}
                   recorderControls={recorderControls}
                 />
+              </div>
+              <div>
+                <Button
+                  variant="contained"
+                  onClick={() => recorderControls.startRecording()}
+                >
+                  <FaPlay />
+                </Button>
+                <Button variant="contained" onClick={handleAudioStoped}>
+                  <FaPause />
+                </Button>
               </div>
             </div>
           )}

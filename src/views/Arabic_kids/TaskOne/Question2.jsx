@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
 import { useNavigate } from "react-router-dom";
 import Axios_Arabic_kids from "../../../api/Axios_arabic_kids";
@@ -75,7 +75,7 @@ export default function ArabicKidsQuestion2() {
 
           return () => clearInterval(intervalId);
         } else {
-          navigate("/task_id=1/question=3");
+          navigate("/kids_id=1/question=3");
         }
       }
     }

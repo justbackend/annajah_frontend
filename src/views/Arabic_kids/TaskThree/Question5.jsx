@@ -8,7 +8,7 @@ import ReactLoading from "react-loading";
 import rington from "../../../assets/audio/rington.mp3";
 
 export default function TaskThreeQuestion5() {
-  const { UID, URL, part3_question_time, part3_waiting_time, partThreeData } =
+  const { UID, URL, URL_Kids, part3_question_time, part3_waiting_time, partThreeData } =
     useContext(AuthContext);
 
   const [warningSecond, setWarningSecond] = useState(part3_waiting_time);
@@ -196,7 +196,7 @@ export default function TaskThreeQuestion5() {
           <div className="flex w-full justify-center">
             {uploading ? (
               <div className="flex flex-col items-center justify-center gap-2">
-                <a href={`${URL}/download/${UID}/`}>
+                <a href={`${URL_Kids}/download/${UID}/`}>
                   <Button variant="contained" color="success">
                     Audiolarni yuklab olish
                   </Button>

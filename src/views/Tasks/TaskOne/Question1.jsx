@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
 import { useNavigate } from "react-router-dom";
 import Axios from "../../../api/Axios";
@@ -17,6 +17,13 @@ export default function TaskOneQuestion1() {
     partOneData,
     setMust,
     must,
+    selectedDifficulty,
+    setPart1_question_time,
+    setPart1_waiting_time,
+    setPart2_question_time,
+    setPart2_waiting_time,
+    setPart3_question_time,
+    setPart3_waiting_time,
   } = useContext(AuthContext);
 
   const [warningSecond, setWarningSecond] = useState(part1_waiting_time);
@@ -105,6 +112,39 @@ export default function TaskOneQuestion1() {
       window.onbeforeunload = null;
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("jwtToken")) {
+        const getSettings = async () => {
+          const { data } = await Axios.get(
+            selectedDifficulty == "daraja_1" ? "settings/" : "kids/settings/",
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${
+                  JSON.parse(localStorage.getItem("jwtToken")).access
+                }`,
+              },
+            },
+          );
+          setPart1_question_time(data.part1_question_time);
+          setSecond(data.part1_question_time);
+          setPart1_waiting_time(data.part1_waiting_time);
+          setWarningSecond(data.part1_waiting_time);
+          setPart2_question_time(data.part2_question_time);
+          setPart2_waiting_time(data.part2_waiting_time);
+          setPart3_question_time(data.part3_question_time);
+          setPart3_waiting_time(data.part3_waiting_time);
+        };
+        getSettings();
+      }
+    } catch (error) {
+      console.error(error.message);
+      setIsLoading(false);
+      window.location.href = "/";
+    }
+  }, [second, warningSecond]);
 
   useEffect(() => {
     if (oneAudio && twoAudio && threeAudio) {
