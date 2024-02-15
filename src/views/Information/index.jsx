@@ -8,17 +8,11 @@ import Axios from "../../api/Axios";
 import { AuthContext } from "../../hooks/Context/AuthContext";
 import { v4 as uuidv4 } from "uuid";
 
-
-
 export default function Information() {
-  const {
-    UID,
-    selectedDifficulty,
-    setSelectedDifficulty,
-    SETUID,
-  } = useContext(AuthContext);
+  const { UID, selectedDifficulty, setSelectedDifficulty, SETUID } =
+    useContext(AuthContext);
 
-  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState("");
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [fatherName, setFatherName] = useState("");
@@ -50,12 +44,12 @@ export default function Information() {
       setIsLoading(true);
       try {
         let endpoint = "user/";
-  
+
         // Check the selectedSubject and selectedDifficulty values
         if (selectedDifficulty === "daraja_2") {
           endpoint = "kids/user/";
         }
-  
+
         await Axios.post(
           endpoint,
           {
@@ -74,22 +68,23 @@ export default function Information() {
           },
         );
 
-        if(selectedDifficulty === "daraja_1"){
+        if (selectedDifficulty === "daraja_1" && selectedSubject !== "") {
           navigate("/task_id=1/question=1");
           success();
           setName("");
           setSurname("");
           setFatherName("");
           localStorage.setItem("user", true);
-        } else if(selectedDifficulty === "daraja_2") {
+        } else if (selectedDifficulty === "daraja_2" && selectedSubject !== "") {
           navigate("/kids_id=1/question=1");
           success();
           setName("");
           setSurname("");
-        setFatherName("");
-        localStorage.setItem("user", true);
+          setFatherName("");
+          localStorage.setItem("user", true);
         } else {
           warning();
+          setIsLoading(false);
         }
       } catch (error) {
         setIsLoading(false);
@@ -98,6 +93,7 @@ export default function Information() {
       }
     } else {
       warning();
+      setIsLoading(false);
     }
   };
 
@@ -129,7 +125,7 @@ export default function Information() {
   }, []);
 
   return (
-    <div  className="mt-8 flex min-h-[400px] flex-row items-center justify-center gap-3 bg-[#F7F7F7]">
+    <div className="relative mt-8 flex min-h-[400px] flex-row items-center justify-center gap-3 bg-[#F7F7F7]">
       <div className="flex w-[400px]  flex-col items-start justify-center gap-3 rounded-[20px] bg-[#fff] p-8">
         <div className="flex w-full flex-col gap-5">
           <h1 className="text-start text-xl font-bold">
@@ -181,16 +177,33 @@ export default function Information() {
           {!isLoading ? <span>Boshlash</span> : <span>Loading...</span>}
         </Button>
       </div>
-      <div className="flex flex-col top-0 mt-0">
-        <select value={selectedSubject} onChange={handleSubjectChange} className="p-3 w-[110px] min-h-[40px]" name="" id="">
+      <div className="absolute right-0 top-0 mt-0 flex flex-col">
+        <select
+          value={selectedSubject}
+          onChange={handleSubjectChange}
+          className="min-h-[40px] w-[200px] rounded-md border border-blue-400 p-3 shadow-md"
+          name=""
+          id=""
+        >
+          <option hidden>Tilni tanlang</option>
           <option value="arab_tili">Arab tili</option>
-          <option value="eng_tili" disabled>🔒Englsh tili</option>
-          <option value="rus_tili" disabled>🔒Rus tili</option>
+          <option value="eng_tili" disabled>
+            🔒Ingliz tili
+          </option>
+          <option value="rus_tili" disabled>
+            🔒Rus tili
+          </option>
         </select>
-        <select value={selectedDifficulty} onChange={handleDifficultyChange} className="p-3  w-[110px] min-h-[40px] mt-4" name="" id="">
-          <option value="">Daraja:</option>
-          <option value="daraja_1">daraja 1</option>
-          <option value="daraja_2">daraja 2</option>
+        <select
+          value={selectedDifficulty}
+          onChange={handleDifficultyChange}
+          className="mt-4 min-h-[40px] w-[200px] rounded-md border border-blue-400 p-3 shadow-md"
+          name=""
+          id=""
+        >
+          <option hidden>Daraja:</option>
+          <option value="daraja_2">daraja 1</option>
+          <option value="daraja_1">daraja 2</option>
         </select>
       </div>
       <ToastContainer />

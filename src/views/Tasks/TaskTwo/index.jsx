@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
 
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,9 @@ import { AuthContext } from "../../../hooks/Context/AuthContext";
 import rington from "../../../assets/audio/rington.mp3";
 
 export default function TaskTwo() {
+  const [isPause, setIsPause] = useState(false);
+  const intervalIdRef = useRef(null);
+
   const { UID, URL, part2_question_time, part2_waiting_time, must } =
     useContext(AuthContext);
 
@@ -56,6 +59,7 @@ export default function TaskTwo() {
     addAudioToDatabase(blob, fileName);
   };
 
+
   useEffect(() => {
     try {
       const getTask = async () => {
@@ -78,6 +82,20 @@ export default function TaskTwo() {
   }, []);
 
   useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'p') {
+        setIsPause((prevIsPause) => !prevIsPause); // Toggle the value
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []);
+
+  useEffect(() => {
     if (oneAudio && twoAudio) {
       if (warningSecond > 0) {
         const intervalId = setInterval(() => {
@@ -86,25 +104,32 @@ export default function TaskTwo() {
 
         return () => clearInterval(intervalId);
       } else {
-        recorderControls.startRecording();
-        setTimeout(
-          () => {
-            recorderControls.stopRecording();
-          },
-          1000 * (part2_question_time - 1),
-        );
         if (second > 0) {
-          const intervalId = setInterval(() => {
-            setSecond((prevSecond) => prevSecond - 1);
-          }, 1000);
+          if (!isPause) {
+            if (second === 1){
+              recorderControls.stopRecording();
+            }
+            else if (!recorderControls.isPaused) {
+              recorderControls.startRecording();
+            } else {
+              recorderControls.togglePauseResume();
+            }intervalIdRef.current = setInterval(() => {
+              setSecond((prev) => prev - 1);
+            }, 1000);
+            
+          } else {
+            
+            clearInterval(intervalIdRef.current);
+            recorderControls.togglePauseResume();
+          }
 
-          return () => clearInterval(intervalId);
+          return () => clearInterval(intervalIdRef.current);
         } else {
           navigate("/task_id=3/question=1");
         }
       }
     }
-  }, [warningSecond, second, oneAudio, twoAudio]);
+  }, [warningSecond, second, oneAudio, twoAudio, isPause]);
 
   const handleEndedOneAudio = () => {
     setOneAudio(true);
@@ -222,10 +247,10 @@ export default function TaskTwo() {
         <div className="flex w-full items-center justify-center">
           <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#118FCE] md:h-[50px] md:w-[50px]">
             <h1 className="text-xl font-bold text-[#118FCE] md:text-[25px]">
-              {oneAudio && twoAudio ? (
+              {oneAudio && twoAudio && isRington ? (
                 <span>{warningSecond > 0 ? warningSecond : second}</span>
               ) : (
-                <span>{part2_waiting_time}</span>
+                <span>{warningSecond}</span>
               )}
             </h1>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
 import Axios_Arabic_kids from "../../../api/Axios_arabic_kids";
 import { AuthContext } from "../../../hooks/Context/AuthContext";
@@ -8,6 +8,8 @@ import ReactLoading from "react-loading";
 import rington from "../../../assets/audio/rington.mp3";
 
 export default function TaskThreeQuestion5() {
+  const [isPause, setIsPause] = useState(false);
+  const intervalIdRef = useRef(null);
   const { UID, URL, URL_Kids, part3_question_time, part3_waiting_time, partThreeData } =
     useContext(AuthContext);
 
@@ -53,6 +55,20 @@ export default function TaskThreeQuestion5() {
   };
 
   useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'p') {
+        setIsPause((prevIsPause) => !prevIsPause); // Toggle the value
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []);   
+
+  useEffect(() => {
     if (oneAudio && twoAudio) {
       if (warningSecond > 0) {
         const intervalId = setInterval(() => {
@@ -61,23 +77,30 @@ export default function TaskThreeQuestion5() {
 
         return () => clearInterval(intervalId);
       } else {
-        recorderControls.startRecording();
-        setTimeout(
-          () => {
-            recorderControls.stopRecording();
-          },
-          1000 * (part3_question_time - 1),
-        );
         if (second > 0) {
-          const intervalId = setInterval(() => {
-            setSecond((prevSecond) => prevSecond - 1);
-          }, 1000);
+          if (!isPause) {
+            if (second === 1){
+              recorderControls.stopRecording();
+            }
+            else if (!recorderControls.isPaused) {
+              recorderControls.startRecording();
+            } else {
+              recorderControls.togglePauseResume();
+            }intervalIdRef.current = setInterval(() => {
+              setSecond((prev) => prev - 1);
+            }, 1000);
+            
+          } else {
+            
+            clearInterval(intervalIdRef.current);
+            recorderControls.togglePauseResume();
+          }
 
-          return () => clearInterval(intervalId);
+          return () => clearInterval(intervalIdRef.current);
         }
       }
     }
-  }, [warningSecond, second, oneAudio, twoAudio]);
+  }, [warningSecond, second, oneAudio, twoAudio, isPause]);
 
   const playlist = [taskQuestionAudio, URL + partThreeData.audio5];
 
@@ -183,10 +206,10 @@ export default function TaskThreeQuestion5() {
           <div className="flex w-full items-center justify-center">
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#118FCE] md:h-[50px] md:w-[50px]">
               <h1 className="text-xl font-bold text-[#118FCE] md:text-[25px]">
-                {oneAudio && twoAudio ? (
+                {oneAudio && twoAudio && isRington ? (
                   <span>{warningSecond > 0 ? warningSecond : second}</span>
                 ) : (
-                  <span>{part3_waiting_time}</span>
+                  <span>{warningSecond}</span>
                 )}
               </h1>
             </div>

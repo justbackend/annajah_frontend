@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
 import { useNavigate } from "react-router-dom";
 import Axios from "../../../api/Axios";
@@ -8,6 +8,9 @@ import taskQuestionAudio from "../../../assets/audio/question1.aac";
 import rington from "../../../assets/audio/rington.mp3";
 
 export default function TaskOneQuestion1() {
+  const [isPause, setIsPause] = useState(false);
+  const intervalIdRef = useRef(null);
+
   const {
     UID,
     URL,
@@ -144,10 +147,24 @@ export default function TaskOneQuestion1() {
       setIsLoading(false);
       window.location.href = "/";
     }
-  }, [second, warningSecond]);
+  }, []);
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'p') {
+        setIsPause((prevIsPause) => !prevIsPause); // Toggle the value
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []);
+  
 
   useEffect(() => {
-    if (oneAudio && twoAudio && threeAudio) {
+    if (oneAudio && twoAudio && threeAudio) { 
       if (warningSecond > 0) {
         const intervalId = setInterval(() => {
           setWarningSecond((prevSecond) => prevSecond - 1);
@@ -155,25 +172,32 @@ export default function TaskOneQuestion1() {
 
         return () => clearInterval(intervalId);
       } else {
-        recorderControls.startRecording();
-        setTimeout(
-          () => {
-            recorderControls.stopRecording();
-          },
-          1000 * (part1_question_time - 1),
-        );
         if (second > 0) {
-          const intervalId = setInterval(() => {
-            setSecond((prevSecond) => prevSecond - 1);
-          }, 1000);
+          if (!isPause) {
+            if (second === 1){
+              recorderControls.stopRecording();
+            }
+            else if (!recorderControls.isPaused) {
+              recorderControls.startRecording();
+            } else {
+              recorderControls.togglePauseResume();
+            }intervalIdRef.current = setInterval(() => {
+              setSecond((prev) => prev - 1);
+            }, 1000);
+            
+          } else {
+            
+            clearInterval(intervalIdRef.current);
+            recorderControls.togglePauseResume();
+          }
 
-          return () => clearInterval(intervalId);
+          return () => clearInterval(intervalIdRef.current);
         } else {
           navigate("/task_id=1/question=2");
         }
       }
     }
-  }, [warningSecond, second, oneAudio, twoAudio, threeAudio]);
+  }, [warningSecond, second, oneAudio, twoAudio, threeAudio, isPause]);
 
   const handleEndedOneAudio = () => {
     setOneAudio(true);
@@ -284,10 +308,10 @@ export default function TaskOneQuestion1() {
           <div className="flex w-full items-center justify-center">
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#118FCE] md:h-[50px] md:w-[50px]">
               <h1 className="text-xl font-bold text-[#118FCE] md:text-[25px]">
-                {oneAudio && twoAudio && threeAudio ? (
+                {oneAudio && twoAudio && threeAudio && isRington ? (
                   <span>{warningSecond > 0 ? warningSecond : second}</span>
                 ) : (
-                  <span>{part1_waiting_time}</span>
+                  <span>{warningSecond}</span>
                 )}
               </h1>
             </div>

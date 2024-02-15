@@ -1,21 +1,20 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext,useRef } from "react";
 import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
 import { useNavigate } from "react-router-dom";
 import Axios_Arabic_kids from "../../../api/Axios_arabic_kids";
 import Loading from "../../../components/Loading";
-import { Button } from "@mui/material";
 import { AuthContext } from "../../../hooks/Context/AuthContext";
 import taskQuestionAudio from "../../../assets/audio/question1.aac";
 import rington from "../../../assets/audio/rington.mp3";
-import { FaPlay, FaPause } from "react-icons/fa6";
 import Axios from "../../../api/Axios";
 
 export default function ArabicKidsQuestion1() {
+  const [isPause, setIsPause] = useState(false);
+  const intervalIdRef = useRef(null);
+
   const {
     UID,
     URL,
-    part1_question_time,
-    part1_waiting_time,
     setPartOneData,
     partOneData,
     setMust,
@@ -31,7 +30,6 @@ export default function ArabicKidsQuestion1() {
 
   const [warningSecond, setWarningSecond] = useState(0);
   const [second, setSecond] = useState(0);
-  const [isSecond, setIsSecond] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [oneAudio, setOneAudio] = useState(false);
@@ -148,7 +146,21 @@ export default function ArabicKidsQuestion1() {
       setIsLoading(false);
       window.location.href = "/";
     }
-  }, [second, warningSecond]);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'p') {
+        setIsPause((prevIsPause) => !prevIsPause); // Toggle the value
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []); 
 
   useEffect(() => {
     if (oneAudio && twoAudio && threeAudio) {
@@ -159,25 +171,32 @@ export default function ArabicKidsQuestion1() {
 
         return () => clearInterval(intervalId);
       } else {
-        recorderControls.startRecording();
-        setTimeout(
-          () => {
-            recorderControls.stopRecording();
-          },
-          1000 * (part1_question_time - 1),
-        );
-        if (second > 0 && !isSecond) {
-          const intervalId = setInterval(() => {
-            setSecond((prevSecond) => prevSecond - 1);
-          }, 1000);
+        if (second > 0) {
+          if (!isPause) {
+            if (second === 1){
+              recorderControls.stopRecording();
+            }
+            else if (!recorderControls.isPaused) {
+              recorderControls.startRecording();
+            } else {
+              recorderControls.togglePauseResume();
+            }intervalIdRef.current = setInterval(() => {
+              setSecond((prev) => prev - 1);
+            }, 1000);
+            
+          } else {
+            
+            clearInterval(intervalIdRef.current);
+            recorderControls.togglePauseResume();
+          }
 
-          return () => clearInterval(intervalId);
+          return () => clearInterval(intervalIdRef.current);
         } else {
           navigate("/kids_id=1/question=2");
         }
       }
     }
-  }, [warningSecond, second, oneAudio, twoAudio, threeAudio, isSecond]);
+  }, [warningSecond, second, oneAudio, twoAudio, threeAudio, isPause]);
 
   const handleEndedOneAudio = () => {
     setOneAudio(true);
@@ -193,12 +212,6 @@ export default function ArabicKidsQuestion1() {
 
   const handleEndedIsRington = () => {
     setIsRington(true);
-  };
-
-  const handleAudioStoped = () => {
-    recorderControls.stopRecording();
-
-    setIsSecond(true);
   };
 
   return (
@@ -289,26 +302,15 @@ export default function ArabicKidsQuestion1() {
                   recorderControls={recorderControls}
                 />
               </div>
-              <div>
-                <Button
-                  variant="contained"
-                  onClick={() => recorderControls.startRecording()}
-                >
-                  <FaPlay />
-                </Button>
-                <Button variant="contained" onClick={handleAudioStoped}>
-                  <FaPause />
-                </Button>
-              </div>
             </div>
           )}
           <div className="flex w-full items-center justify-center">
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#118FCE] md:h-[50px] md:w-[50px]">
               <h1 className="text-xl font-bold text-[#118FCE] md:text-[25px]">
-                {oneAudio && twoAudio && threeAudio ? (
+                {oneAudio && twoAudio && threeAudio && isRington ? (
                   <span>{warningSecond > 0 ? warningSecond : second}</span>
                 ) : (
-                  <span>{part1_waiting_time}</span>
+                  <span>{warningSecond}</span>
                 )}
               </h1>
             </div>
